@@ -40,7 +40,7 @@ def use_contribauth(request):
         #       which is ok for all other authentication methods
         reason = CSRFCheck().process_view(request, None, (), {})
         if reason:
-            raise PermissionDenied('CSRF Failed: %s' % reason)
+            raise PermissionDenied(reason)
     return user
 
 def use_token(request):
