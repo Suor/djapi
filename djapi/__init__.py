@@ -13,55 +13,20 @@ DWIM, practicality
 import six
 import cgi
 import json as _json
-from funcy import decorator, is_iter, chain, select_values
+from funcy import decorator, chain, select_values
 from funcy import cached_property, rcompose, memoize, iffy, isa, partial, walk_values, flip
 
 import django
 from django import forms
-from django.conf import settings
 from django.core.exceptions import FieldError, ValidationError
-from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse_lazy
-from django.db.models import QuerySet, F
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.db.models import F
+from django.http import HttpResponseNotAllowed
 from django.views import defaults
 from django.shortcuts import _get_queryset, render
-from django.utils.module_loading import import_string
 
-
-class SmarterJSONEncoder(DjangoJSONEncoder):
-    def default(self, o):
-        if isinstance(o, QuerySet) or is_iter(o):
-            return list(o)
-        else:
-            return super(SmarterJSONEncoder, self).default(o)
-
-def json(*args, **kwargs):
-    if len(args) > 1 and kwargs:
-        raise TypeError("json() accepts data either via positional argument or keyword, not both")
-    if not 1 <= len(args) <= 2:
-        raise TypeError("json() takes from 1 to 2 positional arguments but %d were given"
-                        % len(args))
-    if kwargs:
-        status = args[0] if args else 200
-        data = kwargs
-    elif len(args) == 1:
-        status, data = 200, args[0]
-    else:
-        status, data = args
-
-    if not isinstance(status, int):
-        raise TypeError("HTTP status should be int not %s" % status)
-
-    # Allow response pass through, e.g. error
-    if isinstance(data, HttpResponse):
-        return data
-    # Pretty print in debug mode
-    if settings.DEBUG:
-        json_data = _json.dumps(data, cls=SmarterJSONEncoder, indent=4)
-    else:
-        json_data = _json.dumps(data, cls=SmarterJSONEncoder, separators=(',', ':'))
-    return HttpResponse(json_data, status=status, content_type='application/json')
+from .auth import auth_required, user_passes_test  # noqa
+from .response import json
 
 
 # Querysets
@@ -249,36 +214,6 @@ def validate(call, form=None):
     return call(aform.save(commit=False) if hasattr(aform, 'save') else aform.cleaned_data)
 
 
-# Auth
-
-# Changed from method to property
-if django.VERSION >= (1, 10):
-    is_authenticated = lambda user: user.is_authenticated
-else:
-    is_authenticated = lambda user: user.is_authenticated()
-
-def attempt_auth(request):
-    if is_authenticated(request.user):
-        return True
-    hooks = getattr(settings, 'DJAPI_AUTH', [])
-    for hook in hooks:
-        import_string(hook)(request)
-        if is_authenticated(request.user):
-            return True
-    else:
-        return False
-
-@decorator
-def user_passes_test(call, test, message=None, status=403):
-    attempt_auth(call.request)
-    if test(call.request.user):
-        return call()
-    else:
-        return json(status, detail=message or 'Permission required')
-
-auth_required = user_passes_test(is_authenticated, status=401, message='Authorization required')
-
-
 # Routing
 
 def get_post(get, post):
@@ -289,6 +224,7 @@ def get_post(get, post):
             return post(request, *args, **kwargs)
         else:
             return HttpResponseNotAllowed(['GET', 'POST'])
+    view.csrf_exempt = True
     return view
 
 
