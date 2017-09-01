@@ -24,7 +24,8 @@ def attempt_auth(request):
     for hook in hooks:
         request.user = import_string(hook)(request)
         if is_authenticated(request.user):
-            request.auth_hook = hook
+            if not getattr(request.user, 'is_active', True):
+                raise PermissionDenied('User inactive')
             break
 
 # Hack borrowed from Django Rest Framework
@@ -42,9 +43,6 @@ def use_contribauth(request):
         if reason:
             raise PermissionDenied(reason)
     return user
-
-def use_token(request):
-    raise NotImplementedError
 
 
 # View decorators
