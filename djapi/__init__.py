@@ -217,16 +217,21 @@ def validate(call, form=None):
 
 # Routing
 
+def route(**methods):
+    permitted = sorted(m.upper() for m in methods)
+
+    def routed(request, *args, **kwargs):
+        method = request.method.lower()
+        if method not in methods:
+            return HttpResponseNotAllowed(permitted)
+        return methods[method](request, *args, **kwargs)
+
+    routed.csrf_exempt = True
+    return routed
+
+
 def get_post(get, post):
-    def view(request, *args, **kwargs):
-        if request.method == 'GET':
-            return get(request, *args, **kwargs)
-        elif request.method == 'POST':
-            return post(request, *args, **kwargs)
-        else:
-            return HttpResponseNotAllowed(['GET', 'POST'])
-    view.csrf_exempt = True
-    return view
+    return route(get=get, post=post)
 
 
 # TODO: think if this is a good idea
