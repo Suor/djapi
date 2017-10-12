@@ -154,6 +154,8 @@ def paginate(request, qs, per_page=None):
         return json(400, detail='Bad value for offset or limit parameter')
 
     count = qs.count()
+    if offset >= count:
+        return json(404, detail='offset is too big', count=count)
     page = qs[offset:offset + limit]
 
     uri = _request_uri(request)
