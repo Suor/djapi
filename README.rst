@@ -49,7 +49,7 @@ Usage
     @api.user_passes_test(lambda user: user.is_staff)
     @api.validate(PostForm)
     def posts_create(request, post):
-        post.created_on = timezone.now()
+        post.created_by = request.user
         post.save()
         return api.json(201, created=post.pk)
 
