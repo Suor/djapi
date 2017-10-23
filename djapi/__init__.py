@@ -23,7 +23,6 @@ from django.core.exceptions import FieldError, ValidationError
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import F
 from django.http import HttpResponseNotAllowed
-from django.views import defaults
 from django.shortcuts import _get_queryset, render
 
 from .auth import auth_required, user_passes_test  # noqa
@@ -119,12 +118,6 @@ def queryset(qs):
     qs = _get_queryset(qs)
     qs.__class__ = _extend_queryset_class(qs.__class__)
     return qs
-
-def exclude_fields(qs, exclude):
-    raise NotImplementedError
-
-def rename_keys(data, renames):
-    return [{renames.get(k, k): v for k, v in d.items()} for d in data]
 
 def get_or_404(qs, *args, **kwargs):
     qs = _get_queryset(qs)
@@ -234,19 +227,3 @@ def route(**methods):
 
 def get_post(get, post):
     return route(get=get, post=post)
-
-
-# TODO: think if this is a good idea
-def make_page_not_found(uri_prefix):
-    def page_not_found(request, exception=None, template_name='404.html'):
-        if uri_prefix and not request.path.startswith(uri_prefix):
-            # TODO: pass exception for newer djangos
-            return defaults.page_not_found(request, template_name=template_name)
-        try:
-            message = exception.args[0]
-        except (AttributeError, IndexError):
-            message = 'Not found'
-        return json(404, detail=message)
-    return page_not_found
-
-page_not_found = make_page_not_found('')
