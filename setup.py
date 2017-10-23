@@ -6,7 +6,7 @@ README = open('README.rst').read()
 
 setup(
     name='djapi',
-    version='0.1',
+    version='0.1.1',
     author='Alexander Schepanovski',
     author_email='suor.web@gmail.com',
 
