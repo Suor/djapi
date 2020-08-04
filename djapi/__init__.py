@@ -128,11 +128,11 @@ def get_or_404(qs, *args, **kwargs):
 
 
 @decorator
-def catch(call, exception, status=500):
+def catch(call, exception, status=500, message=None):
     try:
         return call()
     except exception as e:
-        return json(status, detail=e.args[0])
+        return json(status, detail=message or str(e))
 
 def paginate(request, qs, per_page=None):
     offset = request.GET.get('offset', 0)
