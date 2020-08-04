@@ -38,29 +38,13 @@ def _extend_queryset_class(base):
         def _mappers(self):
             return []
 
-        if django.VERSION >= (1, 9):
-            def _clone(self, **kwargs):
-                clone = base._clone(self, **kwargs)
-                clone._mappers = self._mappers
-                return clone
-
-        else:
-            def _clone(self, klass=None, setup=False, **kwargs):
-                if klass and not klass.__name__.startswith('API'):
-                    klass = _extend_queryset_class(klass)
-                clone = base._clone(self, klass=klass, setup=setup, **kwargs)
-                clone._mappers = self._mappers
-                return clone
+        def _clone(self, **kwargs):
+            clone = base._clone(self, **kwargs)
+            clone._mappers = self._mappers
+            return clone
 
         def _fetch_all(self):
-            # This thing appears in Django 1.9.
-            # In Djangos 1.9 and 1.10 both calls mean the same.
-            # Starting from Django 1.11 .iterator() uses chunked fetch
-            # while ._fetch_all() stays with bare _iterable_class.
-            if hasattr(self, '_iterable_class'):
-                it = self._iterable_class(self)
-            else:
-                it = self.iterator()
+            it = self._iterable_class(self)
             self._result_cache = map(rcompose(*self._mappers), it)
 
             # Fill in the rest
