@@ -20,7 +20,7 @@ from funcy import cached_property, rcompose, memoize, iffy, isa, partial, walk_v
 import django
 from django import forms
 from django.core.exceptions import FieldError, ValidationError
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 from django.db.models import F
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import _get_queryset, render
