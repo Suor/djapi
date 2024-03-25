@@ -6,12 +6,13 @@ README = open('README.rst').read()
 
 setup(
     name='djapi',
-    version='0.3',
+    version=open('VERSION').read().strip(),
     author='Alexander Schepanovski',
     author_email='suor.web@gmail.com',
 
     description='The library of simple helpers to build API with Django.',
     long_description=README,
+    long_description_content_type="text/x-rst",
     url='https://github.com/Suor/djapi',
     license='BSD',
 
