@@ -4,7 +4,7 @@ DjAPI
 The library of simple helpers to build API with Django.
 Not aimed at implementing REST.
 
-Requirements: Python 2.7+ and Django 1.8+. Installation::
+Requirements: Python 2.7-3.12+ and Django 2.1-5.0+. Installation::
 
     $ pip install djapi
 
